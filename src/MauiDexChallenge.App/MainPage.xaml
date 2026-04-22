@@ -6,23 +6,23 @@
 
     <ScrollView>
         <VerticalStackLayout Padding="24" Spacing="20">
-            <Border Style="{StaticResource CardBorderStyle}">
+            <Border Style="{DynamicResource CardBorderStyle}">
                 <VerticalStackLayout Spacing="12">
                     <Label Text="DEX Delivery Console"
-                           Style="{StaticResource PageTitleStyle}" />
+                           Style="{DynamicResource PageTitleStyle}" />
                     <Label Text="Two hardcoded DEX payloads, one authenticated Minimal API, and a clean MVVM flow ready for demo."
-                           Style="{StaticResource BodyTextStyle}" />
+                           Style="{DynamicResource BodyTextStyle}" />
                 </VerticalStackLayout>
             </Border>
 
-            <Border Style="{StaticResource CardBorderStyle}">
+            <Border Style="{DynamicResource CardBorderStyle}">
                 <VerticalStackLayout Spacing="12">
                     <Label Text="API Endpoint"
-                           Style="{StaticResource SectionTitleStyle}" />
+                           Style="{DynamicResource SectionTitleStyle}" />
                     <Entry Text="{Binding ApiBaseUrl}"
                            Placeholder="http://localhost:5225" />
                     <Label Text="Tip: on Android emulators, replace localhost with 10.0.2.2 or your machine LAN address."
-                           Style="{StaticResource CaptionTextStyle}" />
+                           Style="{DynamicResource CaptionTextStyle}" />
                 </VerticalStackLayout>
             </Border>
 
@@ -33,22 +33,22 @@
                 <Button Grid.Column="1"
                         Text="Send Machine B"
                         Command="{Binding SendMachineBCommand}"
-                        Style="{StaticResource SecondaryButtonStyle}" />
+                        Style="{DynamicResource SecondaryButtonStyle}" />
             </Grid>
 
-            <Border Style="{StaticResource CardBorderStyle}">
+            <Border Style="{DynamicResource CardBorderStyle}">
                 <VerticalStackLayout Spacing="10">
                     <Grid ColumnDefinitions="*,Auto">
-                        <Label Text="{Binding StatusTitle}"
-                               Style="{StaticResource SectionTitleStyle}" />
+                    <Label Text="{Binding StatusTitle}"
+                           Style="{DynamicResource SectionTitleStyle}" />
                         <ActivityIndicator Grid.Column="1"
                                            IsRunning="{Binding IsBusy}"
                                            IsVisible="{Binding IsBusy}" />
                     </Grid>
                     <Label Text="{Binding StatusMessage}"
-                           Style="{StaticResource BodyTextStyle}" />
+                           Style="{DynamicResource BodyTextStyle}" />
                     <Label Text="{Binding LastSubmissionSummary}"
-                           Style="{StaticResource CaptionTextStyle}" />
+                           Style="{DynamicResource CaptionTextStyle}" />
                 </VerticalStackLayout>
             </Border>
         </VerticalStackLayout>

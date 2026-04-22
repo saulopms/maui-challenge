@@ -1,8 +1,9 @@
 using System.Data;
 using MauiDexChallenge.Shared.Models;
 using Microsoft.Data.SqlClient;
+using Microsoft.Extensions.Configuration;
 
-namespace MauiDexChallenge.Api.Persistence;
+namespace MauiDexChallenge.Infra.Persistence;
 
 public sealed class SqlDexRepository : IDexRepository
 {

@@ -1,4 +1,4 @@
-namespace MauiDexChallenge.Api.Options;
+namespace MauiDexChallenge.Infra.Options;
 
 public sealed class DatabaseOptions
 {

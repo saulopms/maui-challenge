@@ -1,87 +1,85 @@
-using System.Data;
-using System.Text.RegularExpressions;
-using MauiDexChallenge.Api.Options;
-using Microsoft.Data.SqlClient;
+using System;
+using System.IO;
+using System.Threading;
+using System.Threading.Tasks;
+using MauiDexChallenge.Infra.Options;
+using MauiDexChallenge.Infra.Persistence;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
-namespace MauiDexChallenge.Api.Persistence;
-
-public sealed class DatabaseInitializer : IHostedService
+namespace MauiDexChallenge.Api.Persistence
 {
-    private static readonly Regex BatchSplitter = new(
-        @"^\s*GO\s*$",
-        RegexOptions.Multiline | RegexOptions.IgnoreCase | RegexOptions.Compiled);
-
-    private readonly IConfiguration _configuration;
-    private readonly DatabaseOptions _databaseOptions;
-    private readonly IWebHostEnvironment _environment;
-    private readonly ILogger<DatabaseInitializer> _logger;
-
-    public DatabaseInitializer(
-        IConfiguration configuration,
-        IOptions<DatabaseOptions> databaseOptions,
-        IWebHostEnvironment environment,
-        ILogger<DatabaseInitializer> logger)
+    internal sealed class DatabaseInitializer : BackgroundService
     {
-        _configuration = configuration;
-        _databaseOptions = databaseOptions.Value;
-        _environment = environment;
-        _logger = logger;
-    }
+        private readonly IConfiguration _configuration;
+        private readonly DatabaseOptions _databaseOptions;
+        private readonly IWebHostEnvironment _environment;
+        private readonly ILogger<DatabaseInitializer> _logger;
+        private readonly DatabaseScriptExecutor _executor;
 
-    public async Task StartAsync(CancellationToken cancellationToken)
-    {
-        if (!_databaseOptions.InitializeOnStartup)
+        public DatabaseInitializer(
+            IConfiguration configuration,
+            IOptions<DatabaseOptions> databaseOptions,
+            IWebHostEnvironment environment,
+            ILogger<DatabaseInitializer> logger,
+            DatabaseScriptExecutor executor)
         {
-            _logger.LogInformation("Database initialization is disabled.");
-            return;
+            _configuration = configuration ?? throw new ArgumentNullException(nameof(configuration));
+            _databaseOptions = databaseOptions?.Value ?? new DatabaseOptions();
+            _environment = environment ?? throw new ArgumentNullException(nameof(environment));
+            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            _executor = executor ?? throw new ArgumentNullException(nameof(executor));
         }
 
-        string? connectionString = _configuration.GetConnectionString("DexDatabase");
-        if (string.IsNullOrWhiteSpace(connectionString))
+        protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
-            throw new InvalidOperationException("Connection string 'DexDatabase' was not configured.");
-        }
-
-        string sqlDirectory = Path.Combine(_environment.ContentRootPath, "Sql");
-        string createDatabaseScriptPath = Path.Combine(sqlDirectory, "001-create-database.sql");
-        string schemaScriptPath = Path.Combine(sqlDirectory, "002-schema.sql");
-
-        await ExecuteScriptAsync(BuildMasterConnectionString(connectionString), createDatabaseScriptPath, cancellationToken);
-        await ExecuteScriptAsync(connectionString, schemaScriptPath, cancellationToken);
-    }
-
-    public Task StopAsync(CancellationToken cancellationToken) => Task.CompletedTask;
-
-    private async Task ExecuteScriptAsync(string connectionString, string scriptPath, CancellationToken cancellationToken)
-    {
-        string script = await File.ReadAllTextAsync(scriptPath, cancellationToken);
-        string[] batches = BatchSplitter.Split(script);
-
-        await using var connection = new SqlConnection(connectionString);
-        await connection.OpenAsync(cancellationToken);
-
-        foreach (string batch in batches)
-        {
-            if (string.IsNullOrWhiteSpace(batch))
+            if (!_databaseOptions.InitializeOnStartup)
             {
-                continue;
+                _logger.LogInformation("Database initialization is disabled.");
+                return;
             }
 
-            await using var command = connection.CreateCommand();
-            command.CommandType = CommandType.Text;
-            command.CommandText = batch;
-            await command.ExecuteNonQueryAsync(cancellationToken);
+            string? connectionString = _configuration.GetConnectionString("DexDatabase");
+            if (string.IsNullOrWhiteSpace(connectionString))
+            {
+                _logger.LogWarning("Connection string 'DexDatabase' was not configured. Skipping DB initialization.");
+                return;
+            }
+
+            string sqlDirectory = Path.Combine(_environment.ContentRootPath, "Sql");
+
+            if (!Directory.Exists(sqlDirectory))
+            {
+                // Fallback to output directory (when scripts are copied to build output)
+                string outputSqlDir = Path.Combine(AppContext.BaseDirectory, "Sql");
+                if (Directory.Exists(outputSqlDir))
+                {
+                    sqlDirectory = outputSqlDir;
+                    _logger.LogInformation("Using SQL directory from output: {SqlDir}", sqlDirectory);
+                }
+                else
+                {
+                    _logger.LogWarning("SQL directories not found. Tried '{ContentSql}' and '{OutputSql}'. Skipping DB initialization.",
+                        Path.Combine(_environment.ContentRootPath, "Sql"), outputSqlDir);
+                    return;
+                }
+            }
+
+            try
+            {
+                await _executor.RunScriptsAsync(connectionString, sqlDirectory, stoppingToken).ConfigureAwait(false);
+                _logger.LogInformation("Database initialization completed.");
+            }
+            catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)
+            {
+                _logger.LogInformation("Database initialization canceled.");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Database initialization failed.");
+            }
         }
-    }
-
-    private static string BuildMasterConnectionString(string connectionString)
-    {
-        var builder = new SqlConnectionStringBuilder(connectionString)
-        {
-            InitialCatalog = "master"
-        };
-
-        return builder.ConnectionString;
     }
 }

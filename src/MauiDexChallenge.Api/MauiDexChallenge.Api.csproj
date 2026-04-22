@@ -15,7 +15,15 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Content Include="..\..\sql\**\*.sql" Link="Sql\%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
+    <ProjectReference Include="..\MauiDexChallenge.Infra\MauiDexChallenge.Infra.csproj" />
+  </ItemGroup>
+
+  <!-- Include SQL scripts from Infra project and copy them to Api output so DatabaseInitializer can find them at runtime -->
+  <ItemGroup>
+    <Content Include="..\MauiDexChallenge.Infra\Sql\**\*.*">
+      <Link>Sql\%(RecursiveDir)%(Filename)%(Extension)</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
   </ItemGroup>
 
 </Project>

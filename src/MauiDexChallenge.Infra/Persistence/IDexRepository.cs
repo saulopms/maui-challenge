@@ -1,6 +1,6 @@
 using MauiDexChallenge.Shared.Models;
 
-namespace MauiDexChallenge.Api.Persistence;
+namespace MauiDexChallenge.Infra.Persistence;
 
 public interface IDexRepository
 {
