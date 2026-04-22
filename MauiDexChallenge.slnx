@@ -1,0 +1,7 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/MauiDexChallenge.Api/MauiDexChallenge.Api.csproj" />
+    <Project Path="src/MauiDexChallenge.App/MauiDexChallenge.App.csproj" />
+    <Project Path="src/MauiDexChallenge.Shared/MauiDexChallenge.Shared.csproj" />
+  </Folder>
+</Solution>

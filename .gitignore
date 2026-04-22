@@ -416,3 +416,11 @@ FodyWeavers.xsd
 *.msix
 *.msm
 *.msp
+
+# Local tooling caches
+.dotnet/
+.templateengine/
+
+# Local database backups and logs
+*.bak
+docs/*.log

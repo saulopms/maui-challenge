@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="MauiDexChallenge.App.MainPage"
+             Title="DEX Sender">
+
+    <ScrollView>
+        <VerticalStackLayout Padding="24" Spacing="20">
+            <Border Style="{StaticResource CardBorderStyle}">
+                <VerticalStackLayout Spacing="12">
+                    <Label Text="DEX Delivery Console"
+                           Style="{StaticResource PageTitleStyle}" />
+                    <Label Text="Two hardcoded DEX payloads, one authenticated Minimal API, and a clean MVVM flow ready for demo."
+                           Style="{StaticResource BodyTextStyle}" />
+                </VerticalStackLayout>
+            </Border>
+
+            <Border Style="{StaticResource CardBorderStyle}">
+                <VerticalStackLayout Spacing="12">
+                    <Label Text="API Endpoint"
+                           Style="{StaticResource SectionTitleStyle}" />
+                    <Entry Text="{Binding ApiBaseUrl}"
+                           Placeholder="http://localhost:5225" />
+                    <Label Text="Tip: on Android emulators, replace localhost with 10.0.2.2 or your machine LAN address."
+                           Style="{StaticResource CaptionTextStyle}" />
+                </VerticalStackLayout>
+            </Border>
+
+            <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
+                <Button Grid.Column="0"
+                        Text="Send Machine A"
+                        Command="{Binding SendMachineACommand}" />
+                <Button Grid.Column="1"
+                        Text="Send Machine B"
+                        Command="{Binding SendMachineBCommand}"
+                        Style="{StaticResource SecondaryButtonStyle}" />
+            </Grid>
+
+            <Border Style="{StaticResource CardBorderStyle}">
+                <VerticalStackLayout Spacing="10">
+                    <Grid ColumnDefinitions="*,Auto">
+                        <Label Text="{Binding StatusTitle}"
+                               Style="{StaticResource SectionTitleStyle}" />
+                        <ActivityIndicator Grid.Column="1"
+                                           IsRunning="{Binding IsBusy}"
+                                           IsVisible="{Binding IsBusy}" />
+                    </Grid>
+                    <Label Text="{Binding StatusMessage}"
+                           Style="{StaticResource BodyTextStyle}" />
+                    <Label Text="{Binding LastSubmissionSummary}"
+                           Style="{StaticResource CaptionTextStyle}" />
+                </VerticalStackLayout>
+            </Border>
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage>
