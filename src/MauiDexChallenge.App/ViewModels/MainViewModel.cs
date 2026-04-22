@@ -20,6 +20,7 @@ public sealed class MainViewModel : ObservableObject
 
         SendMachineACommand = new AsyncCommand(() => SendAsync(MachineType.A), () => !IsBusy);
         SendMachineBCommand = new AsyncCommand(() => SendAsync(MachineType.B), () => !IsBusy);
+        ClearDatabaseCommand = new AsyncCommand(ClearDatabaseAsync, () => !IsBusy);
     }
 
     public string ApiBaseUrl
@@ -55,6 +56,7 @@ public sealed class MainViewModel : ObservableObject
             {
                 SendMachineACommand.RaiseCanExecuteChanged();
                 SendMachineBCommand.RaiseCanExecuteChanged();
+                ClearDatabaseCommand?.RaiseCanExecuteChanged();
             }
         }
     }
@@ -62,6 +64,8 @@ public sealed class MainViewModel : ObservableObject
     public AsyncCommand SendMachineACommand { get; }
 
     public AsyncCommand SendMachineBCommand { get; }
+
+    public AsyncCommand ClearDatabaseCommand { get; }
 
     private async Task SendAsync(MachineType machine)
     {
@@ -77,6 +81,32 @@ public sealed class MainViewModel : ObservableObject
             StatusMessage = response.Message;
             LastSubmissionSummary =
                 $"Machine {response.Machine} stored at {response.DexDateTime:yyyy-MM-dd HH:mm:ss} with {response.LaneCount} lane meters.";
+        }
+        catch (Exception ex)
+        {
+            StatusTitle = "Error";
+            StatusMessage = ex.Message;
+        }
+        finally
+        {
+            IsBusy = false;
+        }
+    }
+
+    private async Task ClearDatabaseAsync()
+    {
+        try
+        {
+            IsBusy = true;
+            StatusTitle = "Clearing";
+            StatusMessage = "Clearing database tables...";
+
+            // Call API endpoint to clear database. Use submission service base URL.
+            await _submissionService.ClearDatabaseAsync(ApiBaseUrl, CancellationToken.None);
+
+            StatusTitle = "Cleared";
+            StatusMessage = "Database tables cleared.";
+            LastSubmissionSummary = "";
         }
         catch (Exception ex)
         {

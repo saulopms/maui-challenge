@@ -14,6 +14,26 @@ public sealed class SqlDexRepository : IDexRepository
         _configuration = configuration;
     }
 
+    public async Task ClearAsync(CancellationToken cancellationToken)
+    {
+        string? connectionString = _configuration.GetConnectionString("DexDatabase");
+        if (string.IsNullOrWhiteSpace(connectionString))
+        {
+            throw new InvalidOperationException("Connection string 'DexDatabase' was not configured.");
+        }
+
+        await using var connection = new SqlConnection(connectionString);
+        await connection.OpenAsync(cancellationToken);
+
+        // Truncate child table first to avoid FK constraint issues, then parent
+        await using (var command = connection.CreateCommand())
+        {
+            command.CommandText = "DELETE FROM dbo.DEXLaneMeter; DELETE FROM dbo.DEXMeter;";
+            command.CommandType = CommandType.Text;
+            await command.ExecuteNonQueryAsync(cancellationToken);
+        }
+    }
+
     public async Task SaveAsync(ParsedDexReport report, CancellationToken cancellationToken)
     {
         string? connectionString = _configuration.GetConnectionString("DexDatabase");

@@ -78,6 +78,32 @@ namespace MauiDexChallenge.Api.Endpoints
                     return Results.Problem("An unexpected error occurred while processing the DEX payload.");
                 }
             });
+
+            // Admin endpoint to clear database tables. Protected by basic auth.
+            app.MapPost("/admin/clear-tables", async (
+                HttpRequest request,
+                BasicAuthValidator authValidator,
+                IDexRepository repository,
+                ILoggerFactory loggerFactory,
+                CancellationToken cancellationToken) =>
+            {
+                if (!authValidator.IsAuthorized(request.Headers.Authorization))
+                {
+                    return Results.Unauthorized();
+                }
+
+                try
+                {
+                    await repository.ClearAsync(cancellationToken);
+                    return Results.Ok(new { cleared = true });
+                }
+                catch (Exception ex)
+                {
+                    ILogger logger = loggerFactory.CreateLogger("VdiDexAdminEndpoint");
+                    logger.LogError(ex, "Failed to clear database tables.");
+                    return Results.Problem("Failed to clear database tables.");
+                }
+            });
         }
     }
 }

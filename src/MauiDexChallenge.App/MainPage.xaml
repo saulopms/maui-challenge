@@ -36,6 +36,12 @@
                         Style="{DynamicResource SecondaryButtonStyle}" />
             </Grid>
 
+            <Button Text="Clear Tables"
+                    Command="{Binding ClearDatabaseCommand}"
+                    HorizontalOptions="Center"
+                    BackgroundColor="Transparent"
+                    TextColor="{DynamicResource Secondary}" />
+
             <Border Style="{DynamicResource CardBorderStyle}">
                 <VerticalStackLayout Spacing="10">
                     <Grid ColumnDefinitions="*,Auto">
